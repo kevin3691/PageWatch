@@ -1,0 +1,58 @@
+name: 后端构建
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'pom.xml'
+      - 'backend/**'
+      - 'backend-boot/**'
+      - 'sql/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'pom.xml'
+      - 'backend/**'
+      - 'backend-boot/**'
+      - 'sql/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  backend:
+    name: 测试并构建后端
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: pagewatch_test
+          POSTGRES_USER: pagewatch
+          POSTGRES_PASSWORD: pagewatch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pagewatch -d pagewatch_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: jdbc:postgresql://127.0.0.1:5432/pagewatch_test
+      TEST_DATABASE_USER: pagewatch
+      TEST_DATABASE_PASSWORD: pagewatch
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 配置 Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: 测试并打包
+        run: mvn --batch-mode --no-transfer-progress -pl backend-boot -am package
+      - name: 上传后端构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: pagewatch-backend
+          path: backend-boot/target/pagewatch-boot-*.jar
+          if-no-files-found: error

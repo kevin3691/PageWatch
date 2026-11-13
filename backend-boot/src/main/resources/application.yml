@@ -1,0 +1,24 @@
+server:
+  address: ${PAGEWATCH_BIND:127.0.0.1}
+  port: ${PORT:8088}
+  error:
+    include-message: never
+spring:
+  application:
+    name: pagewatch
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:55432/pagewatch}
+    username: ${DATABASE_USER:pagewatch}
+    password: ${DATABASE_PASSWORD:pagewatch}
+    hikari:
+      maximum-pool-size: 8
+  flyway:
+    enabled: true
+pagewatch:
+  schedule-delay-ms: ${SCHEDULE_DELAY_MS:15000}
+logging:
+  level:
+    dev.pagewatch: INFO
